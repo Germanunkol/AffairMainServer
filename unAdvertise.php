@@ -1,11 +1,6 @@
-
 <?php
 
-if ( array_key_exists( "port", $_POST ) )
-{
 	// All the data needed for this (new?) server:
-	$port = $_POST["port"];
-	$info = $_POST["info"];
 	$ip = $_SERVER["REMOTE_ADDR"];
 
 	// Initialize empty server list:
@@ -23,8 +18,7 @@ if ( array_key_exists( "port", $_POST ) )
 	if( $file ) {
 		flock($file, LOCK_EX);
 			while(($line = fgets($file)) !== false) {
-				$line = str_replace( "\n", "", $line );
-				$s = explode( "\t", $line, 5000 );
+				$s = explode( "\t", $line, 500 );
 				$serverlist[$s[0]] = array(
 						"port" => $s[1],
 						"time" => $s[2],
@@ -33,32 +27,23 @@ if ( array_key_exists( "port", $_POST ) )
 			}
 		fclose( $file );
 
-		//echo "Server info received: ". $ip . ":" . $port . "\n";
+		echo "Server info received: ". $ip . ":" . $port . "\n";
 
-		// TODO: Actually test the connection here.
-
-		$serverlist[$ip] = array(
-				"port" => $port,
-				"time" => time(),
-				"info" => $info,
-				);
+		// Remove
+		if( $serverlist[$ip] )
+		{
+			unset( $serverlist[$ip] );
+		}
 
 		// Write the modified serverlist back to the file:
 		$file = fopen( "serverlist.txt", "w" );
 		if( $file ) {
 			foreach( $serverlist as $ip => $s ) {
 				$line = $ip . "\t" . $s['port'] . "\t" . $s['time'] . "\t" . $s['info'] . "\n";
-				echo "Line: '" . $line . "'";
-				fwrite( $file, $line, 5000 );
+				//echo "Line: " . $line;
+				fwrite( $file, $line, 500 );
 			}
 			fclose( $file );
 		}
 	}
-
-	echo file_get_contents("serverlist.txt");
-}
-else
-{
-	echo "No port given.";
-}
 ?>
