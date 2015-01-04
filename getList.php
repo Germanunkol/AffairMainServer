@@ -6,58 +6,58 @@ $serverlist = array();
 
 $maxPassedTime = 70;	// maximum amount of time a since last server update before it is removed...
 
+$id = htmlspecialchars($_POST["id"]);
+
 // Get the list of servers from the hard disk:
-$file = fopen( "serverlist.txt", "r" );
+$file = fopen( "serverlist.txt", "c+" );
 if( $file ) {
 	flock($file, LOCK_EX);
 	while(($line = fgets($file)) !== false) {
 		$line = str_replace( "\n", "", $line );
 		$s = explode( "\t", $line, 500 );
 		$serverlist[$s[0]] = array(
-				"port" => $s[1],
-				"time" => $s[2],
-				"info" => $s[3],
+				"id" => $s[1],
+				"info" => $s[2],
+				"time" => $s[3],
 				);
 	}
-	fclose( $file );
-}
 
-//$inactive = array();	// set if an inactive server was in the list.
-$inactive = false;
-foreach( $serverlist as $ip => $s ) {
-	if (time() > $s['time'] + $maxPassedTime )
-	{
-		$inactive = true;
-		unset( $serverlist[$ip] );
-		//array_push( $inactive, $ip );
-	} else {
-		$line = $ip . "\t" . $s['port'] . "\t" . $s['time'] . "\t" . $s['info'] . "\n";
-		echo $line;
-	}
-}
-if( $inactive )
-{
-	/*// remove the inactive servers from the list:
-	foreach( $inactive as $num => $ip )
-	{
-		unset($serverlist[$ip]);
-	}*/
-	
-	$file = fopen( "serverlist.txt", "r" );
-	if( $file ) {
-		// Write the modified serverlist back to the file:
-		$file = fopen( "serverlist.txt", "w" );
-		if( $file ) {
-			foreach( $serverlist as $ip => $s ) {
-				$line = $ip . "\t" . $s['port'] . "\t" . $s['time'] . "\t" . $s['info'] . "\n";
-				//echo "Line: " . $line;
-				fwrite( $file, $line, 500 );
+	// set if an inactive server was in the list:
+	$inactive = false;
+	foreach( $serverlist as $address => $s ) {
+		if (time() > $s['time'] + $maxPassedTime )
+		{
+			$inactive = true;
+			unset( $serverlist[$address] );
+		} else {
+			//Filter by ID:
+			if ( $s['id'] == $id )
+			{
+				$line = $address . "\t" . $s['info'] . "\n";
+				echo $line;
 			}
-			fclose( $file );
 		}
-
 	}
+
+	// remove the inactive servers from the list by recreating it:
+	if( $inactive )
+	{
+		ftruncate( $file, 0 );
+		rewind( $file );
+
+		// Write the modified serverlist back to the file:
+		foreach( $serverlist as $address => $s ) {
+			$line = $address . "\t" . "\t" . $s['info'] . "\n";
+			//echo "Line: " . $line;
+			fwrite( $file, $line, 500 );
+		}
+	}
+
+	flock($file, LOCK_UN);
+	fclose( $file );
+
+} else {
+	echo "File not found.";
 }
 
-flock($file, LOCK_UN);
 ?>
