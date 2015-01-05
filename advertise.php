@@ -27,15 +27,32 @@ if ( array_key_exists( "port", $_POST ) )
 						);
 			}
 
-		//echo "Server info received: ". $ip . ":" . $port . "\n";
 
-		// TODO: Actually test the connection here.
+		$connectionFailed = false;
+		echo "entry: " . $serverlist[$address];
+		// Actually test the connection here (but only if it wsn't active before):
+		if( !isset( $serverlist[$address]) )
+		{
+			echo "Connecting:\n";
+			$sock = fsockopen( "tcp://".$ip, $port, $errno, $errstr, 5 );
+			if (!$sock)
+			{
+				echo "\t[Warning:] Main server can't connect to your application on port " . $port . ", maybe you need to open it on your router?\n";
+				$connectionFailed = true;
+			} else {
+				echo "\tConnection successful.\n";
+				fclose( $sock );
+			}
+		}
 
-		$serverlist[$address] = array(
-				"id" => $id,
-				"info" => $info,
-				"time" => time(),
-				);
+		if ( !$connectionFailed )
+		{
+			$serverlist[$address] = array(
+					"id" => $id,
+					"info" => $info,
+					"time" => time(),
+					);
+		}
 
 		ftruncate( $file, 0 );
 		rewind( $file );

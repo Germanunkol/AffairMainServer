@@ -22,8 +22,9 @@
 			while(($line = fgets($file)) !== false) {
 				$s = explode( "\t", $line, 500 );
 				$serverlist[$s[0]] = array(
-						"time" => $s[1],
+						"id" => $s[1],
 						"info" => $s[2],
+						"time" => $s[3],
 						);
 			}
 		fclose( $file );
@@ -40,7 +41,7 @@
 		$file = fopen( "serverlist.txt", "w" );
 		if( $file ) {
 			foreach( $serverlist as $address => $s ) {
-				$line = $address . "\t" . $s['time'] . "\t" . $s['info'] . "\n";
+				$line = $address . "\t" . $s['id'] . "\t" . $s['info'] . "\t" . $s['time'] . "\n";
 				//echo "Line: " . $line;
 				fwrite( $file, $line, 500 );
 			}
