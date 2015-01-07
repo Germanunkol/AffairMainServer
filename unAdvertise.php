@@ -1,5 +1,7 @@
 <?php
 
+	include "loadList.php";
+
 	// All the data needed for this (new?) server:
 	$port = $_POST["port"];
 	$ip = $_SERVER["REMOTE_ADDR"];
@@ -19,14 +21,7 @@
 	$file = fopen( "serverlist.txt", "r" );
 	if( $file ) {
 		flock($file, LOCK_EX);
-			while(($line = fgets($file)) !== false) {
-				$s = explode( "\t", $line, 500 );
-				$serverlist[$s[0]] = array(
-						"id" => $s[1],
-						"info" => $s[2],
-						"time" => $s[3],
-						);
-			}
+		$serverlist = loadList( $file );
 		fclose( $file );
 
 		echo "Server info received: ". $address . "\n";

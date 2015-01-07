@@ -1,6 +1,8 @@
 
 <?php
 
+include "loadList.php";
+
 // Initialize empty server list:
 $serverlist = array();
 
@@ -12,15 +14,7 @@ $id = htmlspecialchars($_POST["id"]);
 $file = fopen( "serverlist.txt", "c+" );
 if( $file ) {
 	flock($file, LOCK_EX);
-	while(($line = fgets($file)) !== false) {
-		$line = str_replace( "\n", "", $line );
-		$s = explode( "\t", $line, 500 );
-		$serverlist[$s[0]] = array(
-				"id" => $s[1],
-				"info" => $s[2],
-				"time" => $s[3],
-				);
-	}
+	$serverlist = loadList( $file );
 
 	// set if an inactive server was in the list:
 	$inactive = false;
@@ -60,4 +54,5 @@ if( $file ) {
 	echo "File not found.";
 }
 
+echo "Test";
 ?>

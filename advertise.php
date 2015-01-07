@@ -1,6 +1,8 @@
 
 <?php
 
+include "loadList.php";
+
 if ( array_key_exists( "port", $_POST ) )
 {
 	// All the data needed for this (new?) server:
@@ -17,22 +19,16 @@ if ( array_key_exists( "port", $_POST ) )
 	$file = fopen( "serverlist.txt", "c+" );
 	if( $file ) {
 		flock($file, LOCK_EX);
-			while(($line = fgets($file)) !== false) {
-				$line = str_replace( "\n", "", $line );
-				$s = explode( "\t", $line, 5000 );
-				$serverlist[$s[0]] = array(
-						"id" => $s[1],
-						"info" => $s[2],
-						"time" => $s[3],
-						);
-			}
+		$serverlist = loadList( $file );
 
-
-		$connectionFailed = false;
-		echo "entry: " . $serverlist[$address];
 		// Actually test the connection here (but only if it wsn't active before):
+		$connectionFailed = false;
 		if( !isset( $serverlist[$address]) )
 		{
+			// Stop locking file, because this might take a while:
+			flock($file, LOCK_UN);
+			fclose($file);
+
 			echo "Connecting:\n";
 			$sock = fsockopen( "tcp://".$ip, $port, $errno, $errstr, 5 );
 			if (!$sock)
@@ -42,6 +38,13 @@ if ( array_key_exists( "port", $_POST ) )
 			} else {
 				echo "\tConnection successful.\n";
 				fclose( $sock );
+			}
+
+			// Update the serverlist with possible changes which may have occurred:
+			$file = fopen( "serverlist.txt", "c+" );
+			if( $file ) {
+				flock($file, LOCK_EX);
+				$serverlist = loadList( $file );
 			}
 		}
 
@@ -65,10 +68,11 @@ if ( array_key_exists( "port", $_POST ) )
 				fwrite( $file, $line, 5000 );
 			}
 		flock($file, LOCK_UN);
+		fclose( $file );
 	}
 }
 else
 {
-	echo "No port given.";
+	echo "No port given.\n";
 }
 ?>
